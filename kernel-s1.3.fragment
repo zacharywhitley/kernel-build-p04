@@ -1,0 +1,96 @@
+# S1.3 — Storage-safe guest profile (non-SMP, ATA + ext4)
+# Extends P0.4 kernel fragment with block device and filesystem support.
+# Merge onto allnoconfig: KCONFIG_ALLCONFIG=kernel-s1.3.fragment
+#
+# NOTE: Legacy CONFIG_IDE was removed in Linux 5.14.
+# This uses libata (CONFIG_ATA) with PATA_LEGACY for ISA-style
+# IDE at ports 0x1F0-0x1F7 (v86's PIO controller).
+
+CONFIG_X86=y
+CONFIG_X86_32=y
+CONFIG_MMU=y
+CONFIG_BINFMT_ELF=y
+CONFIG_BINFMT_SCRIPT=y
+CONFIG_EXPERT=y
+CONFIG_EMBEDDED=y
+CONFIG_KERNEL_GZIP=y
+
+# Single CPU — eliminates SMP RCU complexity
+# CONFIG_SMP is not set
+# CONFIG_NUMA is not set
+# CONFIG_HOTPLUG_CPU is not set
+
+# Boring scheduling/timing
+CONFIG_PREEMPT_NONE=y
+CONFIG_HZ_100=y
+CONFIG_HZ_PERIODIC=y
+
+# No debug overhead
+# CONFIG_DEBUG_KERNEL is not set
+# CONFIG_MAGIC_SYSRQ is not set
+
+# Initramfs
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_RD_GZIP=y
+CONFIG_INITRAMFS_SOURCE=""
+
+# Pseudo-filesystems
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_TMPFS=y
+CONFIG_SHMEM=y
+CONFIG_PROC_FS=y
+CONFIG_SYSFS=y
+
+# Console: serial only
+CONFIG_TTY=y
+CONFIG_UNIX98_PTYS=y
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+CONFIG_PRINTK=y
+CONFIG_EARLY_PRINTK=y
+
+# Block layer
+CONFIG_BLOCK=y
+CONFIG_BLK_DEV=y
+
+# === S1.3: ATA/SCSI block device (libata) ===
+# libata for ISA IDE controller at 0x1F0 (v86's PIO ATA)
+CONFIG_ATA=y
+CONFIG_ATA_VERBOSE_ERROR=y
+CONFIG_ATA_SFF=y
+CONFIG_PATA_LEGACY=y
+# SCSI disk support — libata presents disks via SCSI layer
+CONFIG_SCSI=y
+CONFIG_BLK_DEV_SD=y
+# No SCSI scanning verbosity
+# CONFIG_SCSI_SCAN_ASYNC is not set
+
+# === S1.3: Filesystems ===
+CONFIG_EXT4_FS=y
+# ext4 can operate without journal for snapshot safety.
+# mkfs.ext4 -O ^has_journal avoids journal replay issues.
+# JBD2 is still needed for ext4 compilation but journal
+# can be disabled per-filesystem at format time.
+CONFIG_JBD2=y
+
+# Partition table support
+CONFIG_PARTITION_ADVANCED=y
+CONFIG_MSDOS_PARTITION=y
+
+# No PCI needed — v86 IDE is ISA-style
+# CONFIG_PCI is not set
+# Actually, our v86 has PCI for NE2K. Keep it.
+CONFIG_PCI=y
+
+# No networking
+# CONFIG_NET is not set
+
+# No modules
+# CONFIG_MODULES is not set
+
+# No virtualization
+# CONFIG_HYPERVISOR_GUEST is not set
+# CONFIG_PARAVIRT is not set
+
+CONFIG_BUG=y

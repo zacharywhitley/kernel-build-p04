@@ -1,0 +1,36 @@
+name: Build S1.3 Storage Kernel
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: sudo apt-get install -y build-essential flex bison bc libelf-dev gcc-multilib
+
+      - name: Fetch kernel source
+        run: |
+          curl -L "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.8.12.tar.xz" -o /tmp/linux.tar.xz
+          tar xf /tmp/linux.tar.xz -C /tmp
+
+      - name: Configure kernel
+        run: |
+          cd /tmp/linux-6.8.12
+          make ARCH=x86 allnoconfig KCONFIG_ALLCONFIG=$GITHUB_WORKSPACE/kernel-s1.3.fragment
+          make ARCH=x86 olddefconfig
+          echo "=== Key config checks ==="
+          grep -E "CONFIG_ATA|CONFIG_PATA|CONFIG_EXT4|CONFIG_SCSI|CONFIG_BLK_DEV_SD|CONFIG_JBD2|CONFIG_SMP" .config
+
+      - name: Build kernel
+        run: |
+          cd /tmp/linux-6.8.12
+          make ARCH=x86 -j$(nproc) bzImage
+          ls -lh arch/x86/boot/bzImage
+
+      - name: Upload bzImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: s13-storage-bzimage
+          path: /tmp/linux-6.8.12/arch/x86/boot/bzImage
